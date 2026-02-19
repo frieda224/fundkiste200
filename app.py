@@ -1,3 +1,4 @@
+
 import streamlit as st
 import tensorflow as tf
 import numpy as np
@@ -7,34 +8,33 @@ import os
 from datetime import date
 
 # ----------------------------
-# Dateinamen (alles im ROOT!)
+# DATEINAMEN (alles im ROOT)
 # ----------------------------
-MODEL_FILE = "keras_model.h5"   # ⬅ GENAU so muss deine .h5 heißen
+MODEL_FILE = "dein_modell.h5"
 LABEL_FILE = "labels.txt"
 DATA_FILE = "data.json"
 
 # ----------------------------
-# Modell & Labels laden
+# MODELL & LABELS LADEN
 # ----------------------------
 if not os.path.exists(MODEL_FILE):
-    st.error(f"❌ Modell-Datei nicht gefunden: {MODEL_FILE}")
+    st.error(f"❌ Modell-Datei fehlt: {MODEL_FILE}")
     st.stop()
 
 if not os.path.exists(LABEL_FILE):
-    st.error(f"❌ Label-Datei nicht gefunden: {LABEL_FILE}")
+    st.error(f"❌ labels.txt fehlt")
     st.stop()
 
 model = tf.keras.models.load_model(MODEL_FILE)
 
 with open(LABEL_FILE, "r") as f:
-    labels = [line.strip() for line in f.readlines()]
+    labels = [line.strip().lower() for line in f.readlines()]
 
-# Debug (sehr wichtig bei Streamlit Cloud)
 st.write("📦 Modell geladen:", MODEL_FILE)
 st.write("🏷️ Labels:", labels)
 
 # ----------------------------
-# Hilfsfunktionen
+# HILFSFUNKTIONEN
 # ----------------------------
 def predict_image(image):
     image = image.convert("RGB")
@@ -43,7 +43,7 @@ def predict_image(image):
     img_array = np.expand_dims(img_array, axis=0)
 
     prediction = model.predict(img_array)
-    index = np.argmax(prediction)
+    index = int(np.argmax(prediction))
     confidence = float(prediction[0][index])
 
     return labels[index], confidence
@@ -67,7 +67,7 @@ st.title("📦 Digitales Fundbüro (Schule)")
 tab1, tab2 = st.tabs(["📸 Fund erfassen", "🔍 Fund suchen"])
 
 # ============================
-# TAB 1: Fund erfassen
+# TAB 1 – FUND ERFASSEN
 # ============================
 with tab1:
     st.header("Gefundenen Gegenstand erfassen")
@@ -97,7 +97,8 @@ with tab1:
         funddatum = st.date_input("Funddatum", value=date.today())
 
         label, confidence = predict_image(image)
-        st.info(f"🤖 KI-Erkennung: **{label}** ({confidence:.2%})")
+
+        st.info(f"🤖 KI erkennt: **{label}** ({confidence:.1%})")
 
         if st.button("Fund speichern"):
             data = load_data()
@@ -106,7 +107,7 @@ with tab1:
             image.save(img_name)
 
             data.append({
-                "label": label,
+                "label": label.strip().lower(),
                 "confidence": confidence,
                 "beschreibung": beschreibung,
                 "fundort": fundort,
@@ -115,21 +116,25 @@ with tab1:
             })
 
             save_data(data)
-            st.success("✅ Fund gespeichert!")
+            st.success("✅ Fund erfolgreich gespeichert!")
 
 # ============================
-# TAB 2: Fund suchen
+# TAB 2 – FUND SUCHEN
 # ============================
 with tab2:
     st.header("Verlorenen Gegenstand suchen")
 
     suchwort = st.selectbox(
         "Was suchst du?",
-        ["Flasche", "Stift", "Brotdose"]
+        labels
     )
 
     data = load_data()
-    treffer = [d for d in data if d["label"] == suchwort]
+
+    treffer = [
+        d for d in data
+        if d["label"].strip().lower() == suchwort.strip().lower()
+    ]
 
     if treffer:
         for d in treffer:
@@ -137,7 +142,7 @@ with tab2:
             st.write(f"**Beschreibung:** {d['beschreibung']}")
             st.write(f"**Fundort:** {d['fundort']}")
             st.write(f"**Datum:** {d['funddatum']}")
-            st.write(f"**KI-Sicherheit:** {d['confidence']:.2%}")
+            st.write(f"**KI-Sicherheit:** {d['confidence']:.1%}")
             st.markdown("---")
     else:
-        st.info("❌ Keine passenden Funde gefunden.")
+        st.info("❌ Kein passender Fund gefunden.")
