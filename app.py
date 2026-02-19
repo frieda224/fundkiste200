@@ -10,7 +10,7 @@ from datetime import date
 # ----------------------------
 # DATEINAMEN (alles im ROOT)
 # ----------------------------
-MODEL_FILE = "keras_modell.h5"
+MODEL_FILE = "keras_model.h5"
 LABEL_FILE = "labels.txt"
 DATA_FILE = "data.json"
 
