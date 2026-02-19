@@ -9,7 +9,7 @@ from datetime import date
 # ----------------------------
 # Dateinamen (alles im ROOT!)
 # ----------------------------
-MODEL_FILE = "dein_modell.h5"   # ⬅ GENAU so muss deine .h5 heißen
+MODEL_FILE = "keras_model.h5"   # ⬅ GENAU so muss deine .h5 heißen
 LABEL_FILE = "labels.txt"
 DATA_FILE = "data.json"
 
